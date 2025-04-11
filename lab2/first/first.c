@@ -8,7 +8,6 @@
 void main() {
     double *array = malloc(N * sizeof(double));
     double final_sum = 0.0;
-    struct timespec start_time, end_time;
 
     srand(time(NULL));
 
