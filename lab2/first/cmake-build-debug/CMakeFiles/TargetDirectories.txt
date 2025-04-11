@@ -1,3 +1,0 @@
-C:/Users/drank/CLionProjects/lab2/lab2/first/cmake-build-debug/CMakeFiles/lab2.dir
-C:/Users/drank/CLionProjects/lab2/lab2/first/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/drank/CLionProjects/lab2/lab2/first/cmake-build-debug/CMakeFiles/rebuild_cache.dir
