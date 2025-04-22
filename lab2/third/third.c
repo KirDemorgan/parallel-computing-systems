@@ -6,7 +6,7 @@
 #include <time.h>
 #include <omp.h>
 
-#define N 100000
+#define N 10000000
 
 void array_operations_sequential(double* a, double* b, double* sum, double* diff, double* prod, double* quot) {
     for (int i = 0; i < N; i++) {
