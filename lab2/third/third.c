@@ -7,7 +7,7 @@
 #include <omp.h>
 #include <unistd.h>
 
-void array_operations_sequential(double* a, double* b, double* sum, double* diff, double* prod, double* quot) {
+void array_operations_sequential(double* a, double* b, double* sum, double* diff, double* prod, double* quot, int N) {
     for (int i = 0; i < N; i++) {
         sum[i] = a[i] + b[i];
         diff[i] = a[i] - b[i];
@@ -16,7 +16,7 @@ void array_operations_sequential(double* a, double* b, double* sum, double* diff
     }
 }
 
-void array_operations_parallel(double* a, double* b, double* sum, double* diff, double* prod, double* quot) {
+void array_operations_parallel(double* a, double* b, double* sum, double* diff, double* prod, double* quot, int N) {
     #pragma omp parallel for
     for (int i = 0; i < N; i++) {
         sum[i] = a[i] + b[i];
@@ -26,9 +26,9 @@ void array_operations_parallel(double* a, double* b, double* sum, double* diff, 
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    int N = 10000000;
     int opt;
-	int N = 10000000;
 
     while ((opt = getopt(argc, argv, "n:")) != -1) {
         switch (opt) {
@@ -64,14 +64,14 @@ int main() {
     }
 
     double start_seq = omp_get_wtime();
-    array_operations_sequential(a, b, sum_seq, diff_seq, prod_seq, quot_seq);
+    array_operations_sequential(a, b, sum_seq, diff_seq, prod_seq, quot_seq, N);
     double end_seq = omp_get_wtime();
 
     printf("Sequential operations:\n");
     printf("Sequential time: %.5f seconds\n\n", end_seq - start_seq);
 
     double start_par = omp_get_wtime();
-    array_operations_parallel(a, b, sum_par, diff_par, prod_par, quot_par);
+    array_operations_parallel(a, b, sum_par, diff_par, prod_par, quot_par, N);
     double end_par = omp_get_wtime();
 
     printf("Parallel operations:\n");

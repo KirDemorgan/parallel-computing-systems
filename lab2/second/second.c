@@ -36,7 +36,6 @@ void quicksort_sequential(double* arr, int low, int high) {
 }
 
 void quicksort_parallel(double* arr, int low, int high) {
-    if (low < high) {
         int pi = partition(arr, low, high);
 
         #pragma omp task
@@ -47,7 +46,7 @@ void quicksort_parallel(double* arr, int low, int high) {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     int N = 100000;
     int opt;
 

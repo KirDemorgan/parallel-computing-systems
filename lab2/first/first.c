@@ -4,7 +4,7 @@
 #include <omp.h>
 #include <unistd.h>
 
-void main() {
+int main(int argc, char* argv[]) {
     int N = 100000;
     int opt;
 
@@ -23,7 +23,7 @@ void main() {
         }
     }
 
-    double *array = malloc(N * sizeof(double));
+    double* array = malloc(N * sizeof(double));
     double final_sum = 0.0;
 
     srand(time(NULL));
@@ -42,9 +42,6 @@ void main() {
     printf("Sequential time: %.5f seconds\n", end_par - start_par);
 
     final_sum = 0.0;
-    start_par = 0.0;
-    end_par = 0.0;
-
     start_par = omp_get_wtime();
 
 #pragma omp parallel for reduction(+:final_sum)
@@ -56,4 +53,5 @@ void main() {
     printf("\nFinal parallel sum: %.2f,\nParallel time: %.5f seconds\n", final_sum, end_par - start_par);
 
     free(array);
+    return 0;
 }
