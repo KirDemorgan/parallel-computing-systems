@@ -44,7 +44,6 @@ void quicksort_parallel(double* arr, int low, int high) {
         #pragma omp task
         quicksort_parallel(arr, pi + 1, high);
     }
-}
 
 int main(int argc, char* argv[]) {
     int N = 100000;
