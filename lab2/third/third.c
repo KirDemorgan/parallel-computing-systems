@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
+#include <unistd.h>
 
 #define N 10000000
 
@@ -28,6 +29,24 @@ void array_operations_parallel(double* a, double* b, double* sum, double* diff, 
 }
 
 int main() {
+    int opt;
+	int N = 10000000;
+
+    while ((opt = getopt(argc, argv, "n:")) != -1) {
+        switch (opt) {
+            case 'n':
+                N = atoi(optarg);
+                if (N <= 0) {
+                    fprintf(stderr, "Error: N must be a positive integer.\n");
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-n array_size]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
+
     double* a = malloc(N * sizeof(double));
     double* b = malloc(N * sizeof(double));
     double* sum_seq = malloc(N * sizeof(double));
