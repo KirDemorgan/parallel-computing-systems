@@ -12,45 +12,45 @@ int main(int argc, char* argv[]) {
         switch (opt) {
             case 'n':
                 N = atoi(optarg);
-            if (N <= 0) {
-                fprintf(stderr, "Error: N must be a positive integer.\n");
-                exit(EXIT_FAILURE);
-            }
-            break;
+                if (N <= 0) {
+                    fprintf(stderr, "Error: N must be a positive integer.\n");
+                    exit(EXIT_FAILURE);
+                }
+                break;
             default:
                 fprintf(stderr, "Usage: %s [-n array_size]\n", argv[0]);
-            exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
         }
     }
 
     double* array = malloc(N * sizeof(double));
-    double final_sum = 0.0;
+    if (array == NULL) {
+        perror("Failed to allocate memory for array");
+        exit(EXIT_FAILURE);
+    }
+    double final_sum_seq = 0.0;
+    double final_sum_par = 0.0;
 
-    srand(time(NULL));
-
+    srand(time(NULL) ^ getpid());
     for (int i = 0; i < N; i++) {
-        array[i] = rand();
+        array[i] = (double)rand() / RAND_MAX;
     }
 
-    double start_par = omp_get_wtime();
+    double start_seq = omp_get_wtime();
     for (int i = 0; i < N; i++) {
-        final_sum += array[i];
+        final_sum_seq += array[i];
+    }
+    double end_seq = omp_get_wtime();
+
+    double start_par = omp_get_wtime();
+    #pragma omp parallel for reduction(+:final_sum_par)
+    for (int i = 0; i < N; i++) {
+        final_sum_par += array[i];
     }
     double end_par = omp_get_wtime();
 
-    printf("Final sum: %f\n", final_sum);
-    printf("Sequential time: %.5f seconds\n", end_par - start_par);
-
-    final_sum = 0.0;
-    start_par = omp_get_wtime();
-
-#pragma omp parallel for reduction(+:final_sum)
-    for (int i = 0; i < N; i++) {
-        final_sum += array[i];
-    }
-    end_par = omp_get_wtime();
-
-    printf("\nFinal parallel sum: %.2f,\nParallel time: %.5f seconds\n", final_sum, end_par - start_par);
+    printf("Sequential time: %.5f seconds\n", end_seq - start_seq);
+    printf("Parallel time: %.5f seconds\n", end_par - start_par);
 
     free(array);
     return 0;

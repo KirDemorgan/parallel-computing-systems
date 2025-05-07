@@ -1,6 +1,3 @@
-//
-// Created by demorgan on 13.04.2025.
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -14,9 +11,9 @@ void swap(double* a, double* b) {
 }
 
 int partition(double* arr, int low, int high) {
+    if (low >= high) return low;
     double pivot = arr[high];
     int i = (low - 1);
-
     for (int j = low; j <= high - 1; j++) {
         if (arr[j] < pivot) {
             i++;
@@ -35,15 +32,21 @@ void quicksort_sequential(double* arr, int low, int high) {
     }
 }
 
-void quicksort_parallel(double* arr, int low, int high) {
+void quicksort_parallel_tasks(double* arr, int low, int high) {
+    if (low < high) {
         int pi = partition(arr, low, high);
 
         #pragma omp task
-        quicksort_parallel(arr, low, pi - 1);
-
+        {
+            quicksort_parallel_tasks(arr, low, pi - 1);
+        }
         #pragma omp task
-        quicksort_parallel(arr, pi + 1, high);
+        {
+           quicksort_parallel_tasks(arr, pi + 1, high);
+        }
     }
+}
+
 
 int main(int argc, char* argv[]) {
     int N = 100000;
@@ -66,9 +69,12 @@ int main(int argc, char* argv[]) {
 
     double* array_seq = malloc(N * sizeof(double));
     double* array_par = malloc(N * sizeof(double));
+    if (array_seq == NULL || array_par == NULL) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
 
-    srand(time(NULL));
-
+    srand(time(NULL) ^ getpid());
     for (int i = 0; i < N; i++) {
         array_seq[i] = array_par[i] = (double)rand() / RAND_MAX * 1000.0;
     }
@@ -77,19 +83,20 @@ int main(int argc, char* argv[]) {
     quicksort_sequential(array_seq, 0, N - 1);
     double end_seq = omp_get_wtime();
 
-    printf("Sequential quicksort:\n");
-    printf("Sequential time: %.5f seconds\n\n", end_seq - start_seq);
-
     double start_par = omp_get_wtime();
     #pragma omp parallel
     {
         #pragma omp single
-        quicksort_parallel(array_par, 0, N - 1);
+        {
+            quicksort_parallel_tasks(array_par, 0, N - 1);
+        }
     }
     double end_par = omp_get_wtime();
 
-    printf("Parallel quicksort:\n");
+    printf("Sequential time: %.5f seconds\n", end_seq - start_seq);
     printf("Parallel time: %.5f seconds\n", end_par - start_par);
+
+
 
     free(array_seq);
     free(array_par);

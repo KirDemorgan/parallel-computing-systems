@@ -1,6 +1,3 @@
-//
-// Created by demorgan on 22.04.2025.
-//
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,7 +9,11 @@ void array_operations_sequential(double* a, double* b, double* sum, double* diff
         sum[i] = a[i] + b[i];
         diff[i] = a[i] - b[i];
         prod[i] = a[i] * b[i];
-        quot[i] = a[i] / b[i];
+        if (b[i] != 0.0) {
+            quot[i] = a[i] / b[i];
+        } else {
+            quot[i] = 0.0;
+        }
     }
 }
 
@@ -22,7 +23,11 @@ void array_operations_parallel(double* a, double* b, double* sum, double* diff, 
         sum[i] = a[i] + b[i];
         diff[i] = a[i] - b[i];
         prod[i] = a[i] * b[i];
-        quot[i] = a[i] / b[i];
+        if (b[i] != 0.0) {
+           quot[i] = a[i] / b[i];
+        } else {
+           quot[i] = 0.0;
+        }
     }
 }
 
@@ -56,8 +61,16 @@ int main(int argc, char* argv[]) {
     double* prod_par = malloc(N * sizeof(double));
     double* quot_par = malloc(N * sizeof(double));
 
-    srand(time(NULL));
+    if (!a || !b || !sum_seq || !diff_seq || !prod_seq || !quot_seq ||
+        !sum_par || !diff_par || !prod_par || !quot_par) {
+        perror("Failed to allocate memory for arrays");
+        free(a); free(b); free(sum_seq); free(diff_seq); free(prod_seq); free(quot_seq);
+        free(sum_par); free(diff_par); free(prod_par); free(quot_par);
+        exit(EXIT_FAILURE);
+    }
 
+
+    srand(time(NULL) ^ getpid());
     for (int i = 0; i < N; i++) {
         a[i] = (double)rand() / RAND_MAX * 100.0 + 1.0;
         b[i] = (double)rand() / RAND_MAX * 100.0 + 1.0;
@@ -67,37 +80,15 @@ int main(int argc, char* argv[]) {
     array_operations_sequential(a, b, sum_seq, diff_seq, prod_seq, quot_seq, N);
     double end_seq = omp_get_wtime();
 
-    printf("Sequential operations:\n");
-    printf("Sequential time: %.5f seconds\n\n", end_seq - start_seq);
-
     double start_par = omp_get_wtime();
     array_operations_parallel(a, b, sum_par, diff_par, prod_par, quot_par, N);
     double end_par = omp_get_wtime();
 
-    printf("Parallel operations:\n");
-    printf("Parallel time: %.5f seconds\n\n", end_par - start_par);
+    printf("Sequential time: %.5f seconds\n", end_seq - start_seq);
+    printf("Parallel time: %.5f seconds\n", end_par - start_par);
 
-    printf("First 5 elements comparison:\n");
-    printf("Index\tSum\t\tDiff\t\tProd\t\tQuot\n");
-    for (int i = 0; i < 5; i++) {
-        printf("%d\t%.2f/%.2f\t%.2f/%.2f\t%.2f/%.2f\t%.2f/%.2f\n",
-               i,
-               sum_seq[i], sum_par[i],
-               diff_seq[i], diff_par[i],
-               prod_seq[i], prod_par[i],
-               quot_seq[i], quot_par[i]);
-    }
-
-    free(a);
-    free(b);
-    free(sum_seq);
-    free(diff_seq);
-    free(prod_seq);
-    free(quot_seq);
-    free(sum_par);
-    free(diff_par);
-    free(prod_par);
-    free(quot_par);
+    free(a); free(b); free(sum_seq); free(diff_seq); free(prod_seq); free(quot_seq);
+    free(sum_par); free(diff_par); free(prod_par); free(quot_par);
 
     return 0;
 }
