@@ -22,7 +22,7 @@ void main() {
     double end_par = omp_get_wtime();
 
     printf("Final sum: %f\n", final_sum);
-    printf("Elapsed time: %.5f seconds\n", end_par - start_par);
+    printf("Sequential time: %.5f seconds\n", end_par - start_par);
 
     final_sum = 0.0;
     start_par = 0.0;
@@ -36,7 +36,7 @@ void main() {
     }
     end_par = omp_get_wtime();
 
-    printf("\nFinal parallel sum: %.2f,\nElapsed time: %.5f seconds\n", final_sum, end_par - start_par);
+    printf("\nFinal parallel sum: %.2f,\nParallel time: %.5f seconds\n", final_sum, end_par - start_par);
 
     free(array);
 }

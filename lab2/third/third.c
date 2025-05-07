@@ -51,14 +51,14 @@ int main() {
     double end_seq = omp_get_wtime();
 
     printf("Sequential operations:\n");
-    printf("Elapsed time: %.5f seconds\n\n", end_seq - start_seq);
+    printf("Sequential time: %.5f seconds\n\n", end_seq - start_seq);
 
     double start_par = omp_get_wtime();
     array_operations_parallel(a, b, sum_par, diff_par, prod_par, quot_par);
     double end_par = omp_get_wtime();
 
     printf("Parallel operations:\n");
-    printf("Elapsed time: %.5f seconds\n\n", end_par - start_par);
+    printf("Parallel time: %.5f seconds\n\n", end_par - start_par);
 
     printf("First 5 elements comparison:\n");
     printf("Index\tSum\t\tDiff\t\tProd\t\tQuot\n");

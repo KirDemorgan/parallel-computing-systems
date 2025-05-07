@@ -63,7 +63,7 @@ int main() {
     double end_seq = omp_get_wtime();
 
     printf("Sequential quicksort:\n");
-    printf("Elapsed time: %.5f seconds\n\n", end_seq - start_seq);
+    printf("Sequential time: %.5f seconds\n\n", end_seq - start_seq);
 
     double start_par = omp_get_wtime();
     #pragma omp parallel
@@ -74,7 +74,7 @@ int main() {
     double end_par = omp_get_wtime();
 
     printf("Parallel quicksort:\n");
-    printf("Elapsed time: %.5f seconds\n", end_par - start_par);
+    printf("Parallel time: %.5f seconds\n", end_par - start_par);
 
     free(array_seq);
     free(array_par);
