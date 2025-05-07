@@ -7,8 +7,6 @@
 #include <omp.h>
 #include <unistd.h>
 
-#define N 100000
-
 void swap(double* a, double* b) {
     double temp = *a;
     *a = *b;

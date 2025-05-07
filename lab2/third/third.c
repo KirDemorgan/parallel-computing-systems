@@ -7,8 +7,6 @@
 #include <omp.h>
 #include <unistd.h>
 
-#define N 10000000
-
 void array_operations_sequential(double* a, double* b, double* sum, double* diff, double* prod, double* quot) {
     for (int i = 0; i < N; i++) {
         sum[i] = a[i] + b[i];

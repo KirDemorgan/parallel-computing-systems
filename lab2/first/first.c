@@ -4,8 +4,6 @@
 #include <omp.h>
 #include <unistd.h>
 
-#define N 100000
-
 void main() {
     int N = 100000;
     int opt;
