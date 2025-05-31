@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
     clock_t end_seq = clock();
     float time_seq = (float)(end_seq - start_seq) / CLOCKS_PER_SEC;
 
-    printf("Время CUDA: %.5f сек\n", time_ms / 1000.0f);
-    printf("Время CPU:  %.5f сек\n", time_seq);
+    printf("Parallel time: %.10f seconds\n", time_ms / 1000.0f);
+    printf("Sequential time: %.10f seconds\n", time_seq);
 
     free(a); free(b); free(res_seq); free(res_par);
     CHECK(cudaFree(d_a)); CHECK(cudaFree(d_b)); CHECK(cudaFree(d_c));

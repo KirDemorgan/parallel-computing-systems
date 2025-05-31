@@ -163,8 +163,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Вывод результатов измерения времени
-    printf("Sequential time: %.5f seconds\n", sequential_time);
-    printf("Parallel time: %.5f seconds\n", parallel_time);
+    printf("Sequential time: %.10f seconds\n", sequential_time);
+    printf("Parallel time: %.10f seconds\n", parallel_time);
 
     // Освобождение ресурсов
     free(a); free(b); 
