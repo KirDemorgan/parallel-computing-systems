@@ -194,7 +194,7 @@ create_job_file() {
   cat > "$lsf" <<EOF
 #!/usr/bin/env bash
 #BSUB -J "$id"
-#BSUB -gpu num=${_cores}
+#BSUB -R "rusage[ngpus_excl_p=${_cores}]"
 #BSUB -W "${LSF_CONFIG[WALL_TIME]}"
 #BSUB -o "$logf"
 #BSUB -e "$errf"
