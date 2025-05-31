@@ -91,9 +91,8 @@ int is_power_of_two(int n) {
     return n > 0 && (n & (n - 1)) == 0;
 }
 
-// -----------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
-    int N = 1 << 16;  // по умолчанию 65536
+    int N = 1 << 16;
     int opt;
     while ((opt = getopt(argc, argv, "n:")) != -1) {
         if (opt == 'n') {
@@ -108,11 +107,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    double *arr_seq = malloc(N * sizeof(double));
-    double *arr_par = malloc(N * sizeof(double));
-    double *temp    = malloc(N * sizeof(double));
+    double *arr_seq = (double *)malloc(N * sizeof(double));
+    double *arr_par = (double *)malloc(N * sizeof(double));
+    double *temp    = (double *)malloc(N * sizeof(double));
     if (!arr_seq || !arr_par || !temp) {
         perror("malloc");
+        free(arr_seq);
+        free(arr_par);
+        free(temp);
         return EXIT_FAILURE;
     }
 

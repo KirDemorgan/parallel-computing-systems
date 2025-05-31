@@ -144,7 +144,7 @@ update_job_tracker_field() {
 
 init_environment() {
   log "🚀 Инициализация v${VERSION}"
-  command -v ncc >/dev/null || error "ncc (CUDA Compiler) не доступен."
+  command -v nvcc >/dev/null || error "ncc (CUDA Compiler) не доступен."
   command -v bsub >/dev/null || error "LSF (bsub) не доступен."
   mkdir -p "$LOGS_DIR" "$BIN_DIR" "$TEMP_LSF_DIR" || error "Не удалось создать каталоги."
   COMPLETED_JOBS_FILE="${TEMP_LSF_DIR}/completed_jobs_count.txt"
@@ -159,7 +159,7 @@ compile_programs() {
     local src=${item#*=}
     [[ -f "$src" ]] || { log "${YELLOW}Не найден $src, пропуск.${NC}"; continue; }
     log "▸ Сборка $name из $src"
-    if ncc -arch=sm_35 -O3 "$src" -o "$BIN_DIR/$name"; then
+    if nvcc -arch=sm_35 -O3 "$src" -o "$BIN_DIR/$name"; then
       ((count++)); succ+=("$item")
     else
       log "${YELLOW}Сборка $name не удалась.${NC}"

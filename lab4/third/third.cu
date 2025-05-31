@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <cuda_runtime.h>
-#include <unistd.h>
+#include <unistd.h> // Для getopt
+#include <math.h>   // Для fabs (если будете использовать для сравнения double)
 
 // Макрос для проверки ошибок CUDA
 #define CHECK(call) \
@@ -10,18 +11,18 @@
     const cudaError_t error = call; \
     if (error != cudaSuccess) \
     { \
-        printf("Ошибка: %s:%d, ", __FILE__, __LINE__); \
-        printf("код: %d, причина: %s\n", error, cudaGetErrorString(error)); \
-        exit(1); \
+        fprintf(stderr, "Ошибка CUDA: %s:%d, ", __FILE__, __LINE__); \
+        fprintf(stderr, "код: %d, причина: %s\n", error, cudaGetErrorString(error)); \
+        exit(EXIT_FAILURE); \
     } \
 }
 
 // Ядро CUDA для выполнения операций над массивами
-__global__ void array_operations_kernel(double* a, double* b, double* sum, 
+__global__ void array_operations_kernel(double* a, double* b, double* sum,
                                        double* diff, double* prod, double* quot, int N) {
     // Вычисляем глобальный индекс элемента
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    
+
     // Проверяем, чтобы индекс не выходил за границы массива
     if (idx < N) {
         // Параллельно выполняем все операции над элементами
@@ -34,7 +35,7 @@ __global__ void array_operations_kernel(double* a, double* b, double* sum,
 }
 
 // Последовательная версия операций над массивами
-void array_operations_sequential(double* a, double* b, double* sum, 
+void array_operations_sequential(double* a, double* b, double* sum,
                                 double* diff, double* prod, double* quot, int N) {
     for (int i = 0; i < N; i++) {
         sum[i] = a[i] + b[i];         // Сложение
@@ -51,7 +52,8 @@ int main(int argc, char* argv[]) {
     int opt;
 
     // Разбор аргументов командной строки
-    while ((opt = getopt(argc, argv, "n:t:")) {
+    // ИСПРАВЛЕНО: добавлено '!= -1' к условию цикла while
+    while ((opt = getopt(argc, argv, "n:t:")) != -1) {
         switch (opt) {
             case 'n':
                 N = atoi(optarg);  // Установка размера массивов
@@ -67,7 +69,7 @@ int main(int argc, char* argv[]) {
                     exit(EXIT_FAILURE);
                 }
                 break;
-            default:
+            default: /* '?' или ':' в зависимости от реализации getopt */
                 fprintf(stderr, "Использование: %s [-n размер_массива] [-t потоков_в_блоке]\n", argv[0]);
                 exit(EXIT_FAILURE);
         }
@@ -76,7 +78,7 @@ int main(int argc, char* argv[]) {
     // Выделение памяти на хосте (CPU)
     double *a, *b, *sum_seq, *diff_seq, *prod_seq, *quot_seq;
     double *sum_par, *diff_par, *prod_par, *quot_par;
-    
+
     a = (double*)malloc(N * sizeof(double));
     b = (double*)malloc(N * sizeof(double));
     sum_seq = (double*)malloc(N * sizeof(double));
@@ -92,23 +94,27 @@ int main(int argc, char* argv[]) {
     if (!a || !b || !sum_seq || !diff_seq || !prod_seq || !quot_seq ||
         !sum_par || !diff_par || !prod_par || !quot_par) {
         perror("Ошибка выделения памяти для массивов");
-        free(a); free(b); free(sum_seq); free(diff_seq); free(prod_seq); free(quot_seq);
+        // Освобождаем то, что могло быть выделено
+        free(a); free(b);
+        free(sum_seq); free(diff_seq); free(prod_seq); free(quot_seq);
         free(sum_par); free(diff_par); free(prod_par); free(quot_par);
         exit(EXIT_FAILURE);
     }
 
     // Инициализация массивов случайными значениями
-    srand(time(NULL) ^ getpid());
+    // Используем getpid() для лучшей уникальности seed при быстрых запусках
+    srand(time(NULL) ^ (getpid() << 16));
     for (int i = 0; i < N; i++) {
+        // Генерируем значения в диапазоне [1.0, 101.0) чтобы избежать деления на 0 и получить нетривиальные числа
         a[i] = (double)rand() / RAND_MAX * 100.0 + 1.0;
         b[i] = (double)rand() / RAND_MAX * 100.0 + 1.0;
     }
 
     // Последовательное выполнение операций
-    clock_t start_seq = clock();
+    clock_t start_seq_time = clock(); // Изменил имя переменной, чтобы не конфликтовать с cudaEvent_t start
     array_operations_sequential(a, b, sum_seq, diff_seq, prod_seq, quot_seq, N);
-    clock_t end_seq = clock();
-    double sequential_time = (double)(end_seq - start_seq) / CLOCKS_PER_SEC;
+    clock_t end_seq_time = clock();
+    double sequential_time = (double)(end_seq_time - start_seq_time) / CLOCKS_PER_SEC;
 
     // Выделение памяти на устройстве (GPU)
     double *d_a, *d_b, *d_sum, *d_diff, *d_prod, *d_quot;
@@ -127,24 +133,24 @@ int main(int argc, char* argv[]) {
     int blocksPerGrid = (N + threadsPerBlock - 1) / threadsPerBlock;
 
     // Создание событий CUDA для измерения времени
-    cudaEvent_t start, stop;
-    CHECK(cudaEventCreate(&start));
-    CHECK(cudaEventCreate(&stop));
+    cudaEvent_t start_event, stop_event; // Изменил имена, чтобы не конфликтовать с clock_t start_seq_time
+    CHECK(cudaEventCreate(&start_event));
+    CHECK(cudaEventCreate(&stop_event));
 
     // Запись начального события
-    CHECK(cudaEventRecord(start));
+    CHECK(cudaEventRecord(start_event, 0)); // 0 - default stream
 
     // Запуск ядра на GPU
     array_operations_kernel<<<blocksPerGrid, threadsPerBlock>>>(d_a, d_b, d_sum, d_diff, d_prod, d_quot, N);
-    CHECK(cudaGetLastError());
+    CHECK(cudaGetLastError()); // Проверка ошибок запуска ядра
 
     // Запись конечного события
-    CHECK(cudaEventRecord(stop));
-    CHECK(cudaEventSynchronize(stop));
+    CHECK(cudaEventRecord(stop_event, 0)); // 0 - default stream
+    CHECK(cudaEventSynchronize(stop_event)); // Ожидание завершения события (и всех предыдущих операций в потоке)
 
     // Расчет времени выполнения на GPU
     float milliseconds = 0;
-    CHECK(cudaEventElapsedTime(&milliseconds, start, stop));
+    CHECK(cudaEventElapsedTime(&milliseconds, start_event, stop_event));
     double parallel_time = milliseconds / 1000.0;
 
     // Копирование результатов обратно на хост
@@ -153,31 +159,56 @@ int main(int argc, char* argv[]) {
     CHECK(cudaMemcpy(prod_par, d_prod, N * sizeof(double), cudaMemcpyDeviceToHost));
     CHECK(cudaMemcpy(quot_par, d_quot, N * sizeof(double), cudaMemcpyDeviceToHost));
 
-    // Проверка результатов (опционально)
+    // Проверка результатов (опционально, с учетом погрешности для double)
+    const double epsilon = 1e-9; // Малая величина для сравнения double
+    int mismatches = 0;
     for (int i = 0; i < N; i++) {
-        if (sum_seq[i] != sum_par[i] || diff_seq[i] != diff_par[i] || 
-            prod_seq[i] != prod_par[i] || quot_seq[i] != quot_par[i]) {
-            printf("Несоответствие результатов на индексе %d\n", i);
-            break;
+        if (fabs(sum_seq[i] - sum_par[i]) > epsilon ||
+            fabs(diff_seq[i] - diff_par[i]) > epsilon ||
+            fabs(prod_seq[i] - prod_par[i]) > epsilon ||
+            fabs(quot_seq[i] - quot_par[i]) > epsilon) {
+            // printf("Несоответствие результатов на индексе %d\n", i);
+            // printf("  sum_seq: %.10f, sum_par: %.10f\n", sum_seq[i], sum_par[i]);
+            // printf("  diff_seq: %.10f, diff_par: %.10f\n", diff_seq[i], diff_par[i]);
+            // printf("  prod_seq: %.10f, prod_par: %.10f\n", prod_seq[i], prod_par[i]);
+            // printf("  quot_seq: %.10f, quot_par: %.10f\n", quot_seq[i], quot_par[i]);
+            mismatches++;
+            if (mismatches < 5) { // Показать только первые несколько несоответствий
+                 printf("Несоответствие результатов на индексе %d\n", i);
+            }
+            // break; // Раскомментируйте, если хотите остановиться на первой ошибке
         }
     }
+    if (mismatches > 0) {
+        printf("Обнаружено %d несоответствий в результатах.\n", mismatches);
+    } else {
+        printf("Результаты последовательной и параллельной версий совпадают.\n");
+    }
+
 
     // Вывод результатов измерения времени
+    printf("Array size N: %d, Threads per block: %d\n", N, threadsPerBlock);
     printf("Sequential time: %.10f seconds\n", sequential_time);
-    printf("Parallel time: %.10f seconds\n", parallel_time);
+    printf("Parallel time (CUDA): %.10f seconds\n", parallel_time);
+    if (sequential_time > 0 && parallel_time > 0) {
+        printf("Speedup: %.2fx\n", sequential_time / parallel_time);
+    }
+
 
     // Освобождение ресурсов
-    free(a); free(b); 
+    free(a); free(b);
     free(sum_seq); free(diff_seq); free(prod_seq); free(quot_seq);
     free(sum_par); free(diff_par); free(prod_par); free(quot_par);
+
     CHECK(cudaFree(d_a));
     CHECK(cudaFree(d_b));
     CHECK(cudaFree(d_sum));
     CHECK(cudaFree(d_diff));
     CHECK(cudaFree(d_prod));
     CHECK(cudaFree(d_quot));
-    CHECK(cudaEventDestroy(start));
-    CHECK(cudaEventDestroy(stop));
+
+    CHECK(cudaEventDestroy(start_event));
+    CHECK(cudaEventDestroy(stop_event));
 
     return 0;
 }
