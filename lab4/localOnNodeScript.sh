@@ -15,7 +15,7 @@ EXECUTABLES_SOURCE=(
   fourth=fourth.cu
 )
 BIN_DIR="bin_local_test"
-CSV_RESULTS_FILE="local_cuda_test_results_repeated.csv"
+CSV_RESULTS_FILE="made_with_love_by_demorgan.csv"
 
 log() {
   echo -e "[${CYAN}$(date '+%F %T')${NC}] $*"
