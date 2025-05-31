@@ -121,10 +121,6 @@ for name_key in "${!COMPILED_EXECUTABLES[@]}"; do
                found_time_in_this_run=1
           fi
       done
-
-      if [[ $found_time_in_this_run -eq 0 ]]; then
-          echo "$name_key,$size,$attempt,NoTimeFound,N/A,$status_message,$exit_code" >> "${CSV_RESULTS_FILE}"
-      fi
     done
     echo ""
   done
