@@ -52,3 +52,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+/lab2/first/cmake-build-debug/CMakeFiles/clion-Debug-log.txt
