@@ -100,7 +100,7 @@ log()   { echo -e "[${CYAN}$(date '+%F %T')${NC}] $*"; }
 error() { log "${RED}ERROR:${NC} $*" >&2; if declare -f cleanup_resources &>/dev/null; then cleanup_resources 1; else exit 1; fi; }
 
 INPUT_SIZES=(128 131072 134217728)
-CORES=(1 2)
+CORES=(1)
 REPEATS=10
 EXECUTABLES=(
   first=first.cu
@@ -194,7 +194,7 @@ create_job_file() {
   cat > "$lsf" <<EOF
 #!/usr/bin/env bash
 #BSUB -J "$id"
-#BSUB -R "rusage[ngpus_excl_p=${_cores}]"
+#BSUB -R "rusage[ngpus_excl_p=1]"
 #BSUB -W "${LSF_CONFIG[WALL_TIME]}"
 #BSUB -o "$logf"
 #BSUB -e "$errf"
