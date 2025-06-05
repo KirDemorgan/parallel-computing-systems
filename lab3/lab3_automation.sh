@@ -292,7 +292,7 @@ create_job_file() {
 #!/usr/bin/env bash
 #BSUB -J "$job_script_name"
 #BSUB -n $core_count
-#BSUB -R "span[ptile=$core_count]"  
+#BSUB -R "span[ptile=1]"  
 #BSUB -W "${LSF_CONFIG[WALL_TIME]}"
 #BSUB -o "$log_file_path"
 #BSUB -e "$err_file_path"
