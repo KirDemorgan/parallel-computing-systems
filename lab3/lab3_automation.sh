@@ -153,7 +153,7 @@ log()   { echo -e "[${CYAN}$(date '+%F %T')${NC}] $*"; }
 error() { log "${RED}ERROR:${NC} $*" >&2; if declare -f cleanup_resources &>/dev/null; then cleanup_resources 1; else exit 1; fi; }
 
 INPUT_SIZES=(100 100000 100000000)
-CORES=(2 4 8)
+CORES=(1 3 5)
 REPEATS=10
 EXECUTABLES=(
   first=first.c
@@ -292,6 +292,7 @@ create_job_file() {
 #!/usr/bin/env bash
 #BSUB -J "$job_script_name"
 #BSUB -n $core_count
+#BSUB -R "span[ptile=$core_count]"  
 #BSUB -W "${LSF_CONFIG[WALL_TIME]}"
 #BSUB -o "$log_file_path"
 #BSUB -e "$err_file_path"
